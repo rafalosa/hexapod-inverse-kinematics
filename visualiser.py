@@ -41,12 +41,14 @@ class Leg(BodyPart):
                  "_femur_angle",
                  "_tibia_angle"}
 
+    # todo: Put angles into a dict.
+    # todo: Put limb lengths into a dict.
+
     def __init__(self, ax_: plt.Axes, attach_point: List[float], femur_len, tibia_len, leg_angle, femur_ang, tibia_ang):
         super().__init__()
         self._ax = ax_
         self._lines = None
         self._lines_vertices = None
-
         self._origin = attach_point
         self._femur_length = femur_len
         self._tibia_length = tibia_len
@@ -59,29 +61,29 @@ class Leg(BodyPart):
 
     def draw(self, ax_: plt.Axes):
 
-        point1 = self.joints[0]
-        point2 = self.joints[1]
-        point3 = self.joints[2]
+        x_data = [x[0] for x in self.joints]
+        y_data = [y[1] for y in self.joints]
+        z_data = [z[2] for z in self.joints]
 
         if not self._lines:
-            self._lines = ax_.plot([point1[0], point2[0], point3[0]],
-                                   [point1[1], point2[1], point3[1]],
-                                   [point1[2], point2[2], point3[2]], "b")
+            self._lines = ax_.plot(x_data,
+                                   y_data,
+                                   z_data, "b")
 
-            self._lines_vertices = ax_.scatter3D([point1[0], point2[0], point3[0]],
-                                                 [point1[1], point2[1], point3[1]],
-                                                 [point1[2], point2[2], point3[2]],
+            self._lines_vertices = ax_.scatter3D(x_data,
+                                                 y_data,
+                                                 z_data,
                                                  edgecolor="blue",
                                                  facecolor="blue")
 
         else:
-            self._lines[0].set_data_3d([point1[0], point2[0], point3[0]],
-                                       [point1[1], point2[1], point3[1]],
-                                       [point1[2], point2[2], point3[2]])
+            self._lines[0].set_data_3d(x_data,
+                                       y_data,
+                                       z_data,)
 
-            self._lines_vertices._offsets3d = ([point1[0], point2[0], point3[0]],
-                                               [point1[1], point2[1], point3[1]],
-                                               [point1[2], point2[2], point3[2]])
+            self._lines_vertices._offsets3d = (x_data,
+                                               y_data,
+                                               z_data)
 
     def update_joints_position(self, angles: List[float]):
 
@@ -129,7 +131,7 @@ class Core(BodyPart):
         self._create_vertices()
         self._lines = None
         self._lines_vertices = None
-        self._ax = ax
+        self._ax = ax_
 
     def _create_vertices(self):
 
@@ -245,7 +247,7 @@ class ForwardKinematicsPreview:
                               orientation="horizontal")
 
         ax.set_xlim3d([-20, 20])
-        ax.set_ylim3d([-20, 20])
+        ax.set_ylim3d([-20, 20])  # todo: Automate adjusting the limits, since set_aspect does not work on 3d axes.
         ax.set_zlim3d([-20, 20])
 
         self.leg_ang.on_changed(self.update)
@@ -268,7 +270,7 @@ class ForwardKinematicsPreview:
 
 if __name__ == '__main__':
 
-    fig = plt.figure(figsize=(8, 10))
+    fig = plt.figure(figsize=(8, 12))
     ax = fig.add_subplot(111, projection="3d")
 
     cor = Core(ax, 20, 15, 10)
