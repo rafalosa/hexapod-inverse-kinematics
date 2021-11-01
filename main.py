@@ -36,9 +36,8 @@ if __name__ == '__main__':
     #
     # sim = simulators.ForwardKinematicsPreview(ax, bot)
 
-    limb = Leg(ax, [0, 0, 0], femur, tibia, 0, 0, 0)
+    limb = Leg(ax, [0, 0, 0], femur, tibia, 60, 0, 0)
     foot = limb.joints[2]
-    print(foot)
 
     lim = 15
     ax.set_xlim3d([-lim, lim])
@@ -71,7 +70,7 @@ if __name__ == '__main__':
                       orientation="horizontal")
 
     limb.draw()
-    model = ik.LegKinematics(limb._origin, femur, tibia, 0)
+    model = ik.LegKinematics(limb._origin, femur, tibia, 60)
 
     x_slider.on_changed(update)
     y_slider.on_changed(update)

@@ -23,7 +23,7 @@ class LimbKinematics(ABC):
         pass
 
     @abstractmethod
-    def angles_from_rel_position(self, offsetsn: List[float]) -> List[float]:
+    def angles_from_rel_position(self, offsets: List[float]) -> List[float]:
         pass
 
     @abstractmethod
@@ -44,11 +44,13 @@ class LegKinematics(LimbKinematics):
         self.knee = [femur_length * np.cos(leg_ang / 180 * np.pi),
                      femur_length * np.sin(leg_ang / 180 * np.pi),
                      self.origin[2]]
-        self.foot = [tibia_length * np.cos(leg_ang / 180 * np.pi),
-                     tibia_length * np.sin(leg_ang / 180 * np.pi),
-                     self.origin[2]]
+        self.foot = [self.knee[0] + tibia_length * np.cos(leg_ang / 180 * np.pi),
+                     self.knee[1] + tibia_length * np.sin(leg_ang / 180 * np.pi),
+                     self.knee[2] + self.origin[2]]
 
         self.vertices = [self.origin, self.knee, self.foot]
+
+        print(self.foot)
 
         self.femur = femur_length
         self.tibia = tibia_length
@@ -64,7 +66,6 @@ class LegKinematics(LimbKinematics):
         #     self.foot = [self.foot[i] + offsets[i] for i in range(3)]
 
         target = list(np.array(self.foot) + np.array(offsets) - np.array(self.origin))
-        print(target)
 
         leg_proj = np.sqrt(target[0]**2 + target[1]**2)
         origin_to_foot = np.sqrt(target[2]**2 + leg_proj**2)
@@ -87,7 +88,7 @@ class LegKinematics(LimbKinematics):
         tibia_ang = beta_ang + gamma_ang
 
         result = [leg_ang, femur_ang, -tibia_ang]
-        # print(np.array(result)/np.pi*180)
+
         return result
 
     def set_default_position(self, position: List[float]):
