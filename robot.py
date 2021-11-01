@@ -16,7 +16,7 @@ class BodyPart(ABC):
 
     __slots__ = {"_origin",
                  "vertices",
-                 "_ax",
+                 "ax",
                  "_lines",
                  "_lines_vertices"}
 
@@ -45,7 +45,7 @@ class Leg(BodyPart):
 
     def __init__(self, ax_: plt.Axes, attach_point: List[float], femur_len, tibia_len, leg_angle, femur_ang, tibia_ang):
         super().__init__()
-        self._ax = ax_
+        self.ax = ax_
         self._lines = None
         self._lines_vertices = None
         self._origin = attach_point
@@ -65,11 +65,11 @@ class Leg(BodyPart):
         z_data = [z[2] for z in self.joints]
 
         if not self._lines:
-            self._lines = self._ax.plot(x_data,
+            self._lines = self.ax.plot(x_data,
                                         y_data,
                                         z_data, "b")
 
-            self._lines_vertices = self._ax.scatter3D(x_data,
+            self._lines_vertices = self.ax.scatter3D(x_data,
                                                       y_data,
                                                       z_data,
                                                       edgecolor="blue",
@@ -130,7 +130,7 @@ class Core(BodyPart):
         self._create_vertices()
         self._lines = None
         self._lines_vertices = None
-        self._ax = ax_
+        self.ax = ax_
 
     def _create_vertices(self):
 
@@ -153,11 +153,11 @@ class Core(BodyPart):
 
         if not self._lines:
 
-            self._lines = self._ax.plot(x_data,
+            self._lines = self.ax.plot(x_data,
                                         y_data,
                                         z_data, "r")
 
-            self._lines_vertices = self._ax.scatter3D(x_data,
+            self._lines_vertices = self.ax.scatter3D(x_data,
                                                       y_data,
                                                       z_data,
                                                       edgecolor="red",
@@ -177,41 +177,43 @@ class Core(BodyPart):
 
 class Hexapod:
     __slots__ = {"_ax",
-                 "_bodyparts",
+                 "bodyparts",
                  "_default_elevation",
                  "_leg_origins"}
 
     def __init__(self, core: Core):
-        self._ax = core._ax
-        self._bodyparts = {"legs": {}, "core": {"1": core}}  # Leaving room for expansion to other limbs.
+        self._ax = core.ax
+        self.bodyparts = {"legs": {}, "core": {"1": core}}  # Leaving room for expansion to other limbs.
 
     def add_leg(self, femur_len, tibia_len):
 
-        if len(self._bodyparts["legs"]) >= 6:
+        if len(self.bodyparts["legs"]) >= 6:
             raise RuntimeError("Hexapod can have a maximum of 6 legs.")
 
         labels = ["1", "2", "3", "4", "5", "6"]
 
         for leg_number in labels:
-            if leg_number not in self._bodyparts["legs"]:
-                self._bodyparts["legs"][leg_number] = Leg(self._ax,
-                                                          self._bodyparts["core"]["1"].vertices[leg_number],
-                                                          femur_len,
-                                                          tibia_len,
-                                                          60*(int(leg_number)-1),
-                                                          0,
-                                                          0)
+            if leg_number not in self.bodyparts["legs"]:
+                self.bodyparts["legs"][leg_number] = Leg(self._ax,
+                                                         self.bodyparts["core"]["1"].vertices[leg_number],
+                                                         femur_len,
+                                                         tibia_len,
+                                                         60 * (int(leg_number)-1),
+                                                         45,
+                                                         -90)
+                # todo: Add possibility to set a default position of the legs.
                 break
 
     def draw(self):
-        for part_type in self._bodyparts:
-            for part in self._bodyparts[part_type]:
-                self._bodyparts[part_type][part].draw()
+        for part_type in self.bodyparts:
+            for part in self.bodyparts[part_type]:
+                self.bodyparts[part_type][part].draw()
 
-    def update_leg_positions(self, positions):
+    def update_leg_positions(self, angles):
 
-        for i, leg in enumerate(self._bodyparts["legs"]):
-            self._bodyparts["legs"][leg].update_joints_position(positions[i])
+        for i, leg in enumerate(self.bodyparts["legs"]):
+            self.bodyparts["legs"][leg].update_joints_position(angles[i])
+            # print(leg, angles[i])
 
 
 if __name__ == '__main__':

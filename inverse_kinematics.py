@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
+from robot import Leg
 
 
 #
@@ -37,27 +38,19 @@ class LegKinematics(LimbKinematics):
                  "knee",
                  "foot"}
 
-    def __init__(self, attach_point, femur_length, tibia_length, leg_ang):
+    def __init__(self, leg_sim: Leg):
         super().__init__()
 
-        self.origin = attach_point
-        self.knee = [femur_length * np.cos(leg_ang / 180 * np.pi),
-                     femur_length * np.sin(leg_ang / 180 * np.pi),
-                     self.origin[2]]
-        self.foot = [self.knee[0] + tibia_length * np.cos(leg_ang / 180 * np.pi),
-                     self.knee[1] + tibia_length * np.sin(leg_ang / 180 * np.pi),
-                     self.knee[2] + self.origin[2]]
-
+        self.origin = leg_sim.joints[0]
+        self.femur = leg_sim._femur_length
+        self.tibia = leg_sim._tibia_length
+        self.knee = leg_sim.joints[1]
+        self.foot = leg_sim.joints[2]
         self.vertices = [self.origin, self.knee, self.foot]
-
-        print(self.foot)
-
-        self.femur = femur_length
-        self.tibia = tibia_length
         self.current_position = []
         self.end_fixed = False
 
-    def angles_from_rel_position(self, offsets: List[float]) -> List[float]:
+    def angles_from_rel_position(self, offsets: List[float]) -> List[Optional[float]]:
 
         # if self.end_fixed:
         #     self.origin = [self.origin[i] + offsets[i] for i in range(3)]
@@ -67,29 +60,36 @@ class LegKinematics(LimbKinematics):
 
         target = list(np.array(self.foot) + np.array(offsets) - np.array(self.origin))
 
-        leg_proj = np.sqrt(target[0]**2 + target[1]**2)
-        origin_to_foot = np.sqrt(target[2]**2 + leg_proj**2)
+        if np.linalg.norm(np.array(target)) > self.femur + self.tibia:
 
-        beta_ang = np.arccos((origin_to_foot**2 + self.femur**2 - self.tibia**2) /
-                             (2 * origin_to_foot * self.femur))
+            print("Target position unreachable.")
+            return [None, None, None]
 
-        gamma_ang = np.arccos((origin_to_foot**2 + self.tibia**2 - self.femur**2)/
-                              (2 * self.tibia * origin_to_foot))
+        else:
 
-        alpha_ang = np.arctan(target[2]/leg_proj)
+            leg_proj = np.sqrt(target[0]**2 + target[1]**2)
+            origin_to_foot = np.sqrt(target[2]**2 + leg_proj**2)
 
-        leg_ang = np.arccos(target[0] / leg_proj)
+            beta_ang = np.arccos((origin_to_foot**2 + self.femur**2 - self.tibia**2) /
+                                 (2 * origin_to_foot * self.femur))
 
-        if target[1] < 0:
-            leg_ang *= -1
+            gamma_ang = np.arccos((origin_to_foot**2 + self.tibia**2 - self.femur**2)/
+                                  (2 * self.tibia * origin_to_foot))
 
-        femur_ang = beta_ang - alpha_ang
+            alpha_ang = np.arctan(target[2]/leg_proj)
 
-        tibia_ang = beta_ang + gamma_ang
+            leg_ang = np.arccos(target[0] / leg_proj)
 
-        result = [leg_ang, femur_ang, -tibia_ang]
+            if target[1] < 0:
+                leg_ang *= -1
 
-        return result
+            femur_ang = beta_ang - alpha_ang
+
+            tibia_ang = beta_ang + gamma_ang
+
+            result = [leg_ang, femur_ang, -tibia_ang]
+
+            return result
 
     def set_default_position(self, position: List[float]):
         pass
