@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import List
 from abc import ABC, abstractmethod
-from matplotlib.widgets import Slider
 
 
 """This is a simplistic environment used to visualize the calculated robot's positions based on matplotlib."""
@@ -59,22 +58,22 @@ class Leg(BodyPart):
         self.joints = [self._origin, [], []]
         self.update_joints_position([self._leg_angle, self._femur_angle, self._tibia_angle])
 
-    def draw(self, ax_: plt.Axes):
+    def draw(self):
 
         x_data = [x[0] for x in self.joints]
         y_data = [y[1] for y in self.joints]
         z_data = [z[2] for z in self.joints]
 
         if not self._lines:
-            self._lines = ax_.plot(x_data,
-                                   y_data,
-                                   z_data, "b")
+            self._lines = self._ax.plot(x_data,
+                                        y_data,
+                                        z_data, "b")
 
-            self._lines_vertices = ax_.scatter3D(x_data,
-                                                 y_data,
-                                                 z_data,
-                                                 edgecolor="blue",
-                                                 facecolor="blue")
+            self._lines_vertices = self._ax.scatter3D(x_data,
+                                                      y_data,
+                                                      z_data,
+                                                      edgecolor="blue",
+                                                      facecolor="blue")
 
         else:
             self._lines[0].set_data_3d(x_data,
@@ -97,10 +96,10 @@ class Leg(BodyPart):
                                                      self._femur_length * np.sin(self._femur_angle)])
 
         self.joints[1] = list(joint_1)
-        joint2_xy = self._tibia_length * np.cos(self._tibia_angle)
+        joint2_xy = self._tibia_length * np.cos(self._femur_angle + self._tibia_angle)
         joint_2 = joint_1 + np.array([joint2_xy * np.cos(self._leg_angle),
                                       joint2_xy * np.sin(self._leg_angle),
-                                      self._tibia_length * np.sin(self._tibia_angle)])
+                                      self._tibia_length * np.sin(self._femur_angle + self._tibia_angle)])
 
         self.joints[2] = list(joint_2)
 
@@ -144,7 +143,7 @@ class Core(BodyPart):
         self.vertices["5"] = [origin[0] - self.front / 2, origin[1] - self.length / 2, origin[2]]
         self.vertices["6"] = [origin[0] + self.front / 2, origin[1] - self.length / 2, origin[2]]
 
-    def draw(self, ax_):
+    def draw(self):
 
         labels = ["1", "2", "3", "4", "5", "6", "1"]
 
@@ -154,15 +153,15 @@ class Core(BodyPart):
 
         if not self._lines:
 
-            self._lines = ax_.plot(x_data,
-                                   y_data,
-                                   z_data, "r")
+            self._lines = self._ax.plot(x_data,
+                                        y_data,
+                                        z_data, "r")
 
-            self._lines_vertices = ax_.scatter3D(x_data,
-                                                 y_data,
-                                                 z_data,
-                                                 edgecolor="red",
-                                                 facecolor="red")
+            self._lines_vertices = self._ax.scatter3D(x_data,
+                                                      y_data,
+                                                      z_data,
+                                                      edgecolor="red",
+                                                      facecolor="red")
         else:
             self._lines[0].set_data_3d(x_data,
                                        y_data,
@@ -182,8 +181,8 @@ class Hexapod:
                  "_default_elevation",
                  "_leg_origins"}
 
-    def __init__(self, ax_: plt.Axes, core: Core):
-        self._ax = ax_
+    def __init__(self, core: Core):
+        self._ax = core._ax
         self._bodyparts = {"legs": {}, "core": {"1": core}}  # Leaving room for expansion to other limbs.
 
     def add_leg(self, femur_len, tibia_len):
@@ -204,68 +203,15 @@ class Hexapod:
                                                           0)
                 break
 
-    def draw(self, ax_: plt.Axes):
+    def draw(self):
         for part_type in self._bodyparts:
             for part in self._bodyparts[part_type]:
-                self._bodyparts[part_type][part].draw(ax_)
+                self._bodyparts[part_type][part].draw()
 
     def update_leg_positions(self, positions):
 
         for i, leg in enumerate(self._bodyparts["legs"]):
             self._bodyparts["legs"][leg].update_joints_position(positions[i])
-
-
-class ForwardKinematicsPreview:
-
-    def __init__(self, ax_:plt.Axes, robot: Hexapod):
-        self.robot = robot
-        self.ax = ax_
-
-        ax_leg_ang = plt.axes([0.25, 0.1, 0.65, 0.03])
-        ax_fem_ang = plt.axes([0.25, 0.15, 0.65, 0.03])
-        ax_tib_ang = plt.axes([0.25, 0.2, 0.65, 0.03])
-
-        self.leg_ang = Slider(ax=ax_leg_ang,
-                              label="Leg base angle",
-                              valmin=-90,
-                              valmax=90,
-                              valinit=0,
-                              orientation="horizontal")
-
-        self.fem_ang = Slider(ax=ax_fem_ang,
-                              label="Femur angle",
-                              valmin=-120,
-                              valmax=120,
-                              valinit=0,
-                              orientation="horizontal")
-
-        self.tib_ang = Slider(ax=ax_tib_ang,
-                              label="Tibia angle",
-                              valmin=-90,
-                              valmax=90,
-                              valinit=0,
-                              orientation="horizontal")
-
-        ax.set_xlim3d([-20, 20])
-        ax.set_ylim3d([-20, 20])  # todo: Automate adjusting the limits, since set_aspect does not work on 3d axes.
-        ax.set_zlim3d([-20, 20])
-
-        self.leg_ang.on_changed(self.update)
-        self.fem_ang.on_changed(self.update)
-        self.tib_ang.on_changed(self.update)
-
-        self.robot.draw(self.ax)
-
-        plt.show()
-
-    def update(self, _):
-
-        angles = [[(ang * 60 + self.leg_ang.val) / 180 * np.pi,
-                   self.fem_ang.val / 180 * np.pi,
-                   self.tib_ang.val / 180 * np.pi] for ang in range(6)]
-
-        robot.update_leg_positions(angles)
-        robot.draw(ax)
 
 
 if __name__ == '__main__':
@@ -274,7 +220,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111, projection="3d")
 
     cor = Core(ax, 20, 15, 10)
-    robot = Hexapod(ax, cor)
+    robot = Hexapod(cor)
     robot.add_leg(15, 20)
     robot.add_leg(15, 20)
     robot.add_leg(15, 20)
@@ -282,4 +228,6 @@ if __name__ == '__main__':
     robot.add_leg(15, 20)
     robot.add_leg(15, 20)
 
-    ForwardKinematicsPreview(ax, robot)
+    robot.draw()
+
+    plt.show()
