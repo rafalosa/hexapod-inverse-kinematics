@@ -58,22 +58,22 @@ class Leg(BodyPart):
         self.joints = [self._origin, [], []]
         self.update_joints_position([self._leg_angle, self._femur_angle, self._tibia_angle])
 
-    def draw(self, ax_: plt.Axes):
+    def draw(self):
 
         x_data = [x[0] for x in self.joints]
         y_data = [y[1] for y in self.joints]
         z_data = [z[2] for z in self.joints]
 
         if not self._lines:
-            self._lines = ax_.plot(x_data,
-                                   y_data,
-                                   z_data, "b")
+            self._lines = self._ax.plot(x_data,
+                                        y_data,
+                                        z_data, "b")
 
-            self._lines_vertices = ax_.scatter3D(x_data,
-                                                 y_data,
-                                                 z_data,
-                                                 edgecolor="blue",
-                                                 facecolor="blue")
+            self._lines_vertices = self._ax.scatter3D(x_data,
+                                                      y_data,
+                                                      z_data,
+                                                      edgecolor="blue",
+                                                      facecolor="blue")
 
         else:
             self._lines[0].set_data_3d(x_data,
@@ -143,7 +143,7 @@ class Core(BodyPart):
         self.vertices["5"] = [origin[0] - self.front / 2, origin[1] - self.length / 2, origin[2]]
         self.vertices["6"] = [origin[0] + self.front / 2, origin[1] - self.length / 2, origin[2]]
 
-    def draw(self, ax_):
+    def draw(self):
 
         labels = ["1", "2", "3", "4", "5", "6", "1"]
 
@@ -153,15 +153,15 @@ class Core(BodyPart):
 
         if not self._lines:
 
-            self._lines = ax_.plot(x_data,
-                                   y_data,
-                                   z_data, "r")
+            self._lines = self._ax.plot(x_data,
+                                        y_data,
+                                        z_data, "r")
 
-            self._lines_vertices = ax_.scatter3D(x_data,
-                                                 y_data,
-                                                 z_data,
-                                                 edgecolor="red",
-                                                 facecolor="red")
+            self._lines_vertices = self._ax.scatter3D(x_data,
+                                                      y_data,
+                                                      z_data,
+                                                      edgecolor="red",
+                                                      facecolor="red")
         else:
             self._lines[0].set_data_3d(x_data,
                                        y_data,
@@ -181,8 +181,8 @@ class Hexapod:
                  "_default_elevation",
                  "_leg_origins"}
 
-    def __init__(self, ax_: plt.Axes, core: Core):
-        self._ax = ax_
+    def __init__(self, core: Core):
+        self._ax = core._ax
         self._bodyparts = {"legs": {}, "core": {"1": core}}  # Leaving room for expansion to other limbs.
 
     def add_leg(self, femur_len, tibia_len):
@@ -203,10 +203,10 @@ class Hexapod:
                                                           0)
                 break
 
-    def draw(self, ax_: plt.Axes):
+    def draw(self):
         for part_type in self._bodyparts:
             for part in self._bodyparts[part_type]:
-                self._bodyparts[part_type][part].draw(ax_)
+                self._bodyparts[part_type][part].draw()
 
     def update_leg_positions(self, positions):
 
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111, projection="3d")
 
     cor = Core(ax, 20, 15, 10)
-    robot = Hexapod(ax, cor)
+    robot = Hexapod(cor)
     robot.add_leg(15, 20)
     robot.add_leg(15, 20)
     robot.add_leg(15, 20)
@@ -228,6 +228,6 @@ if __name__ == '__main__':
     robot.add_leg(15, 20)
     robot.add_leg(15, 20)
 
-    robot.draw(ax)
+    robot.draw()
 
     plt.show()

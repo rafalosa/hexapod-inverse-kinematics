@@ -45,7 +45,7 @@ class ForwardKinematicsPreview:
         self.fem_ang.on_changed(self.update)
         self.tib_ang.on_changed(self.update)
 
-        self.robot.draw(self.ax)
+        self.robot.draw()
 
         plt.show()
 
@@ -56,4 +56,4 @@ class ForwardKinematicsPreview:
                    self.tib_ang.val / 180 * np.pi] for ang in range(6)]
 
         self.robot.update_leg_positions(angles)
-        self.robot.draw(self.ax)
+        self.robot.draw()
