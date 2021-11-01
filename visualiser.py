@@ -97,10 +97,10 @@ class Leg(BodyPart):
                                                      self._femur_length * np.sin(self._femur_angle)])
 
         self.joints[1] = list(joint_1)
-        joint2_xy = self._tibia_length * np.cos(self._tibia_angle)
+        joint2_xy = self._tibia_length * np.cos(self._femur_angle + self._tibia_angle)
         joint_2 = joint_1 + np.array([joint2_xy * np.cos(self._leg_angle),
                                       joint2_xy * np.sin(self._leg_angle),
-                                      self._tibia_length * np.sin(self._tibia_angle)])
+                                      self._tibia_length * np.sin(self._femur_angle + self._tibia_angle)])
 
         self.joints[2] = list(joint_2)
 
@@ -220,6 +220,7 @@ class ForwardKinematicsPreview:
     def __init__(self, ax_:plt.Axes, robot: Hexapod):
         self.robot = robot
         self.ax = ax_
+        self.ax.set_title("Forward kinematics preview")
 
         ax_leg_ang = plt.axes([0.25, 0.1, 0.65, 0.03])
         ax_fem_ang = plt.axes([0.25, 0.15, 0.65, 0.03])
@@ -241,14 +242,15 @@ class ForwardKinematicsPreview:
 
         self.tib_ang = Slider(ax=ax_tib_ang,
                               label="Tibia angle",
-                              valmin=-90,
-                              valmax=90,
+                              valmin=-120,
+                              valmax=120,
                               valinit=0,
                               orientation="horizontal")
 
-        ax.set_xlim3d([-20, 20])
-        ax.set_ylim3d([-20, 20])  # todo: Automate adjusting the limits, since set_aspect does not work on 3d axes.
-        ax.set_zlim3d([-20, 20])
+        lim = 40
+        ax.set_xlim3d([-lim, lim])
+        ax.set_ylim3d([-lim, lim])  # todo: Automate adjusting the limits, since set_aspect does not work on 3d axes.
+        ax.set_zlim3d([-lim, lim])
 
         self.leg_ang.on_changed(self.update)
         self.fem_ang.on_changed(self.update)
