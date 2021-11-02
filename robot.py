@@ -14,7 +14,7 @@ class BodyPart(ABC):
     """This base class represents the forward kinematics model of limbs which is used to visualize the calculated
     angles from the inverse kinematic model."""
 
-    __slots__ = {"_origin",
+    __slots__ = {"origin",
                  "vertices",
                  "ax",
                  "_lines",
@@ -34,6 +34,8 @@ class BodyPart(ABC):
 
 class Leg(BodyPart):
     __slots__ = {"joints",
+                 "id_",
+                 "parent",
                  "_femur_length",
                  "_tibia_length",
                  "_leg_angle",
@@ -43,19 +45,23 @@ class Leg(BodyPart):
     # todo: Put angles into a dict.
     # todo: Put limb lengths into a dict.
 
-    def __init__(self, ax_: plt.Axes, attach_point: List[float], femur_len, tibia_len, leg_angle, femur_ang, tibia_ang):
+    def __init__(self,id_: str, parent: BodyPart, ax_: plt.Axes, attach_point: List[float], femur_len, tibia_len,
+                 leg_angle, femur_ang, tibia_ang):
+
         super().__init__()
+        self.id_ = id_
         self.ax = ax_
+        self.parent = parent
         self._lines = None
         self._lines_vertices = None
-        self._origin = attach_point
+        self.origin = attach_point
         self._femur_length = femur_len
         self._tibia_length = tibia_len
         self._leg_angle = leg_angle / 180 * np.pi
         self._femur_angle = femur_ang / 180 * np.pi
         self._tibia_angle = tibia_ang / 180 * np.pi
         self.vertices = {}
-        self.joints = [self._origin, [], []]
+        self.joints = [self.origin, [], []]
         self.update_joints_position([self._leg_angle, self._femur_angle, self._tibia_angle])
 
     def draw(self):
@@ -84,16 +90,18 @@ class Leg(BodyPart):
                                                y_data,
                                                z_data)
 
-    def update_joints_position(self, angles: List[float]):
+    def update_joints_position(self, angles: List[float]):  # todo: This needs cleanup.
 
         self._leg_angle = angles[0]
         self._femur_angle = angles[1]
         self._tibia_angle = angles[2]
+        self.origin = self.parent.vertices[self.id_]
+        self.joints[0] = self.origin
 
         joint1_xy = self._femur_length * np.cos(self._femur_angle)
-        joint_1 = np.array(self._origin) + np.array([joint1_xy * np.cos(self._leg_angle),
-                                                     joint1_xy * np.sin(self._leg_angle),
-                                                     self._femur_length * np.sin(self._femur_angle)])
+        joint_1 = np.array(self.origin) + np.array([joint1_xy * np.cos(self._leg_angle),
+                                                    joint1_xy * np.sin(self._leg_angle),
+                                                    self._femur_length * np.sin(self._femur_angle)])
 
         self.joints[1] = list(joint_1)
         joint2_xy = self._tibia_length * np.cos(self._femur_angle + self._tibia_angle)
@@ -118,19 +126,21 @@ class Core(BodyPart):
 
     __slots__ = {"length",
                  "width",
-                 "front"}
+                 "front",
+                 "default"}
 
     def __init__(self, ax_: plt.Axes, length: float, width: float, front: float):
         super().__init__()
         self.length = length
         self.width = width
         self.front = front
-        self._origin = [0, 0, 0]
-        self.vertices = {"0": self._origin}
+        self.origin = [0, 0, 0]
+        self.vertices = {"0": self.origin}
         self._create_vertices()
         self._lines = None
         self._lines_vertices = None
         self.ax = ax_
+        self.default = self.vertices.copy()
 
     def _create_vertices(self):
 
@@ -174,6 +184,16 @@ class Core(BodyPart):
     def update_joints_position(self, position):
         pass
 
+    def offset_body(self, offset: List[float], dynamic: bool):
+
+        if dynamic:
+            for key in self.vertices:
+                self.vertices[key] = list(np.array(self.vertices[key]) + np.array(offset))
+
+        else:
+            for key in self.vertices:
+                self.vertices[key] = list(np.array(self.default[key]) + np.array(offset))
+
 
 class Hexapod:
     __slots__ = {"_ax",
@@ -194,13 +214,15 @@ class Hexapod:
 
         for leg_number in labels:
             if leg_number not in self.bodyparts["legs"]:
-                self.bodyparts["legs"][leg_number] = Leg(self._ax,
-                                                         self.bodyparts["core"]["1"].vertices[leg_number],
-                                                         femur_len,
-                                                         tibia_len,
-                                                         60 * (int(leg_number)-1),
-                                                         45,
-                                                         -90)
+                self.bodyparts["legs"][leg_number] = Leg(id_=leg_number,
+                                                         parent=self.bodyparts["core"]["1"],
+                                                         ax_=self._ax,
+                                                         attach_point=self.bodyparts["core"]["1"].vertices[leg_number],
+                                                         femur_len=femur_len,
+                                                         tibia_len=tibia_len,
+                                                         leg_angle=60 * (int(leg_number)-1),
+                                                         femur_ang=45,
+                                                         tibia_ang=-90)
                 # todo: Add possibility to set a default position of the legs.
                 break
 
@@ -214,6 +236,9 @@ class Hexapod:
         for i, leg in enumerate(self.bodyparts["legs"]):
             self.bodyparts["legs"][leg].update_joints_position(angles[i])
             # print(leg, angles[i])
+
+    def translate_core(self, offset: List[float], dynamic=False):
+        self.bodyparts["core"]["1"].offset_body(offset, dynamic)
 
 
 if __name__ == '__main__':

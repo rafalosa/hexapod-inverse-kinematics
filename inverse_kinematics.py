@@ -49,16 +49,30 @@ class LegKinematics(LimbKinematics):
         self.vertices = [self.origin, self.knee, self.foot]
         self.current_position = []
         self.end_fixed = False
+        print(self.foot)
 
-    def angles_from_rel_position(self, offsets: List[float]) -> List[Optional[float]]:
+    def angles_from_rel_position(self, offsets: List[float], foot_fixed=False, dynamic=False) -> List[Optional[float]]:
 
-        # if self.end_fixed:
-        #     self.origin = [self.origin[i] + offsets[i] for i in range(3)]
-        #
-        # else:
-        #     self.foot = [self.foot[i] + offsets[i] for i in range(3)]
+        """ Calculate the angles based on the offset of the leg from the current position. The offset can
+        can refer to the origin of the leg (shoulder) or the end of the leg (foot)."""
 
-        target = list(np.array(self.foot) + np.array(offsets) - np.array(self.origin))
+        if dynamic:
+            # Dynamic offsets. <- this will eventually be the final version.
+
+            if foot_fixed:
+                self.origin += np.array(offsets)
+            else:
+                self.foot += np.array(offsets)
+
+            target = list(np.array(np.array(self.foot) - np.array(self.origin)))
+
+        else:
+            # Static offsets.
+            if foot_fixed:
+                target = list(np.array(self.foot) - np.array(offsets) - np.array(self.origin))
+
+            else:
+                target = list(np.array(self.foot) + np.array(offsets) - np.array(self.origin))
 
         if np.linalg.norm(np.array(target)) > self.femur + self.tibia:
 
@@ -76,16 +90,19 @@ class LegKinematics(LimbKinematics):
             gamma_ang = np.arccos((origin_to_foot**2 + self.tibia**2 - self.femur**2)/
                                   (2 * self.tibia * origin_to_foot))
 
-            alpha_ang = np.arctan(target[2]/leg_proj)
+            alpha_ang = np.arcsin(np.abs(target[2])/origin_to_foot)
 
             leg_ang = np.arccos(target[0] / leg_proj)
 
-            if target[1] < 0:
-                leg_ang *= -1
+            if target[2] > 0:
+                alpha_ang *= -1
 
             femur_ang = beta_ang - alpha_ang
 
             tibia_ang = beta_ang + gamma_ang
+
+            if target[1] < 0:
+                leg_ang *= -1
 
             result = [leg_ang, femur_ang, -tibia_ang]
 
