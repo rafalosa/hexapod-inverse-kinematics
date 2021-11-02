@@ -8,8 +8,8 @@ if __name__ == '__main__':
     fig = plt.figure(figsize=(10, 12))
     ax = fig.add_subplot(111, projection="3d")
 
-    femur = 17
-    tibia = 24
+    femur = 24
+    tibia = 40
 
     body = Core(ax, 20, 10, 5)
     bot = Hexapod(body)
