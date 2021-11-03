@@ -1,8 +1,11 @@
+import threading
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from robot import Hexapod, Leg
 import numpy as np
 import inverse_kinematics as ik
+import queue
+import time
 
 
 class ForwardKinematicsPreview:
@@ -194,3 +197,59 @@ class InverseKinematicsFixedLegs:
 
         else:
             pass
+
+
+class Animator:
+
+    def __init__(self, ax: plt.Axes, robot: Hexapod):
+
+        self.bot = robot
+
+        ax.set_title("Animated preview.")
+
+        lim = 40
+        ax.set_xlim3d([-lim, lim])
+        ax.set_ylim3d([-lim, lim])
+        ax.set_zlim3d([-lim, lim])
+
+        self.bot.draw()
+
+        keys = self.bot.bodyparts["legs"].keys()
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]) for key in keys]
+
+        plt.show()
+
+        off = -7
+        rising = True
+
+        while True:
+
+            if rising:
+                off += 3
+            else:
+                off -= 3
+
+            if rising and off >= 7:
+                rising = False
+
+            if not rising and off <= -7:
+                rising = True
+
+            offsets = [off, 0, 4]
+
+            angles = [model.angles_from_rel_position(offsets,
+                                                     foot_fixed=True) for model in self.legs]
+
+            if None not in [ang for result in angles for ang in result]:
+
+                self.bot.translate_core(offsets)
+                self.bot.update_leg_positions(angles)
+                self.bot.draw()
+
+            else:
+                pass
+
+            plt.pause(1/60)
+
+
+
