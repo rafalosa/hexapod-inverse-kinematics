@@ -219,23 +219,14 @@ class Animator:
 
         plt.show()
 
-        off = -7
-        rising = True
+        off = 0
+        radius = 7
 
         while True:
 
-            if rising:
-                off += 3
-            else:
-                off -= 3
+            offsets = [radius*np.cos(off), 0 , radius*np.sin(off)]
 
-            if rising and off >= 7:
-                rising = False
-
-            if not rising and off <= -7:
-                rising = True
-
-            offsets = [off, 0, 4]
+            off += np.pi/20
 
             angles = [model.angles_from_rel_position(offsets,
                                                      foot_fixed=True) for model in self.legs]
