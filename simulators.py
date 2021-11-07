@@ -104,12 +104,15 @@ class InverseKinematicsFixedBody:
         self.bot.draw()
 
         keys = self.bot.bodyparts["legs"].keys()
-        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]) for key in keys]
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]._femur_length,
+                                      self.bot.bodyparts["legs"][key]._tibia_length) for key in keys]
+
+        for leg, key in zip(self.legs, keys):
+            leg.set_default_position(self.bot.bodyparts["legs"][key].joints)
 
         self.x_slider.on_changed(self.update)
         self.y_slider.on_changed(self.update)
         self.z_slider.on_changed(self.update)
-
         plt.show()
 
     def update(self, _):
@@ -118,7 +121,9 @@ class InverseKinematicsFixedBody:
         y_offset = self.y_slider.val
         z_offset = self.z_slider.val
 
-        angles = [model.angles_from_rel_position([x_offset, y_offset, z_offset]) for model in self.legs]
+        offsets = np.array([x_offset, y_offset, z_offset])
+
+        angles = [model.angles_from_rel_position(offsets, False, False) for model in self.legs]
 
         if None not in [ang for result in angles for ang in result]:
 
@@ -170,7 +175,11 @@ class InverseKinematicsFixedLegs:
         self.bot.draw()
 
         keys = self.bot.bodyparts["legs"].keys()
-        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]) for key in keys]
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]._femur_length,
+                                      self.bot.bodyparts["legs"][key]._tibia_length) for key in keys]
+
+        for leg, key in zip(self.legs, keys):
+            leg.set_default_position(self.bot.bodyparts["legs"][key].joints)
 
         self.x_slider.on_changed(self.update)
         self.y_slider.on_changed(self.update)
@@ -184,10 +193,11 @@ class InverseKinematicsFixedLegs:
         y_offset = self.y_slider.val
         z_offset = self.z_slider.val
 
-        offsets = [x_offset, y_offset, z_offset]
+        offsets = np.array([x_offset, y_offset, z_offset])
 
         angles = [model.angles_from_rel_position(offsets,
-                                                 foot_fixed=True) for model in self.legs]
+                                                 True,
+                                                 False) for model in self.legs]
 
         if None not in [ang for result in angles for ang in result]:
 
@@ -215,7 +225,11 @@ class Animator:
         self.bot.draw()
 
         keys = self.bot.bodyparts["legs"].keys()
-        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]) for key in keys]
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]._femur_length,
+                                      self.bot.bodyparts["legs"][key]._tibia_length) for key in keys]
+
+        for leg, key in zip(self.legs, keys):
+            leg.set_default_position(self.bot.bodyparts["legs"][key].joints)
 
         plt.show()
 
@@ -228,8 +242,9 @@ class Animator:
 
             off += np.pi/20
 
-            angles = [model.angles_from_rel_position(offsets,
-                                                     foot_fixed=True) for model in self.legs]
+            angles = [model.angles_from_rel_position(np.array(offsets),
+                                                     True,
+                                                     False) for model in self.legs]
 
             if None not in [ang for result in angles for ang in result]:
 

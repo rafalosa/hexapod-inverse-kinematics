@@ -1,13 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import List
 from abc import ABC, abstractmethod
 
 
 """This is a simplistic environment used to visualize the calculated robot's positions based on matplotlib."""
 
-
-# todo: Convert lists into np.ndarray.
 
 class BodyPart(ABC):
 
@@ -45,7 +42,7 @@ class Leg(BodyPart):
     # todo: Put angles into a dict.
     # todo: Put limb lengths into a dict.
 
-    def __init__(self,id_: str, parent: BodyPart, ax_: plt.Axes, attach_point: List[float], femur_len, tibia_len,
+    def __init__(self, id_: str, parent: BodyPart, ax_: plt.Axes, attach_point: np.ndarray, femur_len, tibia_len,
                  leg_angle, femur_ang, tibia_ang):
 
         super().__init__()
@@ -61,25 +58,25 @@ class Leg(BodyPart):
         self._femur_angle = femur_ang / 180 * np.pi
         self._tibia_angle = tibia_ang / 180 * np.pi
         self.vertices = {}
-        self.joints = [self.origin, [], []]
-        self.update_joints_position([self._leg_angle, self._femur_angle, self._tibia_angle])
+        self.joints = np.array((self.origin, (), ()), dtype=object)
+        self.update_joints_position(np.array([self._leg_angle, self._femur_angle, self._tibia_angle]))
 
     def draw(self):
 
-        x_data = [x[0] for x in self.joints]
-        y_data = [y[1] for y in self.joints]
-        z_data = [z[2] for z in self.joints]
+        x_data = np.array([x[0] for x in self.joints])
+        y_data = np.array([y[1] for y in self.joints])
+        z_data = np.array([z[2] for z in self.joints])
 
         if not self._lines:
             self._lines = self.ax.plot(x_data,
-                                        y_data,
-                                        z_data, "b")
+                                       y_data,
+                                       z_data, "b")
 
             self._lines_vertices = self.ax.scatter3D(x_data,
-                                                      y_data,
-                                                      z_data,
-                                                      edgecolor="blue",
-                                                      facecolor="blue")
+                                                     y_data,
+                                                     z_data,
+                                                     edgecolor="blue",
+                                                     facecolor="blue")
 
         else:
             self._lines[0].set_data_3d(x_data,
@@ -90,7 +87,7 @@ class Leg(BodyPart):
                                                y_data,
                                                z_data)
 
-    def update_joints_position(self, angles: List[float]):  # todo: This needs cleanup.
+    def update_joints_position(self, angles: np.ndarray):  # todo: This needs cleanup.
 
         self._leg_angle = angles[0]
         self._femur_angle = angles[1]
@@ -99,17 +96,17 @@ class Leg(BodyPart):
         self.joints[0] = self.origin
 
         joint1_xy = self._femur_length * np.cos(self._femur_angle)
-        joint_1 = np.array(self.origin) + np.array([joint1_xy * np.cos(self._leg_angle),
-                                                    joint1_xy * np.sin(self._leg_angle),
-                                                    self._femur_length * np.sin(self._femur_angle)])
+        joint_1 = self.origin + np.array([joint1_xy * np.cos(self._leg_angle),
+                                          joint1_xy * np.sin(self._leg_angle),
+                                          self._femur_length * np.sin(self._femur_angle)])
 
-        self.joints[1] = list(joint_1)
+        self.joints[1] = joint_1
         joint2_xy = self._tibia_length * np.cos(self._femur_angle + self._tibia_angle)
         joint_2 = joint_1 + np.array([joint2_xy * np.cos(self._leg_angle),
                                       joint2_xy * np.sin(self._leg_angle),
                                       self._tibia_length * np.sin(self._femur_angle + self._tibia_angle)])
 
-        self.joints[2] = list(joint_2)
+        self.joints[2] = joint_2
 
 
 class Core(BodyPart):
@@ -134,7 +131,7 @@ class Core(BodyPart):
         self.length = length
         self.width = width
         self.front = front
-        self.origin = [0, 0, 0]
+        self.origin = np.array([0, 0, 0])
         self.vertices = {"0": self.origin}
         self._create_vertices()
         self._lines = None
@@ -146,12 +143,12 @@ class Core(BodyPart):
 
         origin = self.vertices["0"]
 
-        self.vertices["1"] = [origin[0] + self.width/2, origin[1], origin[2]]
-        self.vertices["2"] = [origin[0] + self.front/2, origin[1] + self.length/2, origin[2]]
-        self.vertices["3"] = [origin[0] - self.front / 2, origin[1] + self.length / 2, origin[2]]
-        self.vertices["4"] = [origin[0] - self.width / 2, origin[1], origin[2]]
-        self.vertices["5"] = [origin[0] - self.front / 2, origin[1] - self.length / 2, origin[2]]
-        self.vertices["6"] = [origin[0] + self.front / 2, origin[1] - self.length / 2, origin[2]]
+        self.vertices["1"] = np.array([origin[0] + self.width/2, origin[1], origin[2]])
+        self.vertices["2"] = np.array([origin[0] + self.front/2, origin[1] + self.length/2, origin[2]])
+        self.vertices["3"] = np.array([origin[0] - self.front / 2, origin[1] + self.length / 2, origin[2]])
+        self.vertices["4"] = np.array([origin[0] - self.width / 2, origin[1], origin[2]])
+        self.vertices["5"] = np.array([origin[0] - self.front / 2, origin[1] - self.length / 2, origin[2]])
+        self.vertices["6"] = np.array([origin[0] + self.front / 2, origin[1] - self.length / 2, origin[2]])
 
     def draw(self):
 
@@ -164,14 +161,14 @@ class Core(BodyPart):
         if not self._lines:
 
             self._lines = self.ax.plot(x_data,
-                                        y_data,
-                                        z_data, "r")
+                                       y_data,
+                                       z_data, "r")
 
             self._lines_vertices = self.ax.scatter3D(x_data,
-                                                      y_data,
-                                                      z_data,
-                                                      edgecolor="red",
-                                                      facecolor="red")
+                                                     y_data,
+                                                     z_data,
+                                                     edgecolor="red",
+                                                     facecolor="red")
         else:
             self._lines[0].set_data_3d(x_data,
                                        y_data,
@@ -184,15 +181,15 @@ class Core(BodyPart):
     def update_joints_position(self, position):
         pass
 
-    def offset_body(self, offset: List[float], dynamic: bool):
+    def offset_body(self, offset: np.ndarray, dynamic: bool):
 
         if dynamic:
             for key in self.vertices:
-                self.vertices[key] = list(np.array(self.vertices[key]) + np.array(offset))
+                self.vertices[key] = self.vertices[key] + offset
 
         else:
             for key in self.vertices:
-                self.vertices[key] = list(np.array(self.default[key]) + np.array(offset))
+                self.vertices[key] = self.default[key] + offset
 
 
 class Hexapod:
@@ -237,7 +234,7 @@ class Hexapod:
             self.bodyparts["legs"][leg].update_joints_position(angles[i])
             # print(leg, angles[i])
 
-    def translate_core(self, offset: List[float], dynamic=False):
+    def translate_core(self, offset: np.ndarray, dynamic=False):
         self.bodyparts["core"]["1"].offset_body(offset, dynamic)
 
 

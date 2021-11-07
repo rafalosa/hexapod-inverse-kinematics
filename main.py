@@ -4,7 +4,9 @@ from robot import Hexapod, Core, Leg
 
 
 if __name__ == '__main__':
+
     with plt.ion():
+
         fig = plt.figure(figsize=(10, 12))
         ax = fig.add_subplot(111, projection="3d")
 
