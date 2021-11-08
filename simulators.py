@@ -104,8 +104,8 @@ class InverseKinematicsFixedBody:
         self.bot.draw()
 
         keys = self.bot.bodyparts["legs"].keys()
-        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]._femur_length,
-                                      self.bot.bodyparts["legs"][key]._tibia_length) for key in keys]
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key].femur_length,
+                                      self.bot.bodyparts["legs"][key].tibia_length) for key in keys]
 
         for leg, key in zip(self.legs, keys):
             leg.set_default_position(self.bot.bodyparts["legs"][key].joints)
@@ -175,8 +175,8 @@ class InverseKinematicsFixedLegs:
         self.bot.draw()
 
         keys = self.bot.bodyparts["legs"].keys()
-        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]._femur_length,
-                                      self.bot.bodyparts["legs"][key]._tibia_length) for key in keys]
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key].femur_length,
+                                      self.bot.bodyparts["legs"][key].tibia_length) for key in keys]
 
         for leg, key in zip(self.legs, keys):
             leg.set_default_position(self.bot.bodyparts["legs"][key].joints)
@@ -225,8 +225,8 @@ class Animator:
         self.bot.draw()
 
         keys = self.bot.bodyparts["legs"].keys()
-        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key]._femur_length,
-                                      self.bot.bodyparts["legs"][key]._tibia_length) for key in keys]
+        self.legs = [ik.LegKinematics(self.bot.bodyparts["legs"][key].femur_length,
+                                      self.bot.bodyparts["legs"][key].tibia_length) for key in keys]
 
         for leg, key in zip(self.legs, keys):
             leg.set_default_position(self.bot.bodyparts["legs"][key].joints)
@@ -238,7 +238,7 @@ class Animator:
 
         while True:
 
-            offsets = [radius*np.cos(off), 0 , radius*np.sin(off)]
+            offsets = np.array([radius*np.cos(off), 0 , radius*np.sin(off)])
 
             off += np.pi/20
 

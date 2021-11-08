@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from abc import ABC, abstractmethod
+from typing import Dict, Union
 
 
 """This is a simplistic environment used to visualize the calculated robot's positions based on matplotlib."""
@@ -86,6 +87,14 @@ class Leg(BodyPart):
             self._lines_vertices._offsets3d = (x_data,
                                                y_data,
                                                z_data)
+
+    @property
+    def femur_length(self):
+        return self._femur_length
+
+    @property
+    def tibia_length(self):
+        return self._tibia_length
 
     def update_joints_position(self, angles: np.ndarray):  # todo: This needs cleanup.
 
@@ -199,8 +208,8 @@ class Hexapod:
                  "_leg_origins"}
 
     def __init__(self, core: Core):
-        self._ax = core.ax
-        self.bodyparts = {"legs": {}, "core": {"1": core}}  # Leaving room for expansion to other limbs.
+        self._ax: plt.axes = core.ax
+        self.bodyparts: Dict[str, Dict[str, Union[Leg, Core]]] = {"legs": {}, "core": {"1": core}}  # Leaving room for expansion to other limbs.
 
     def add_leg(self, femur_len, tibia_len):
 
