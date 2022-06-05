@@ -1,12 +1,8 @@
-import threading
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-from robot import Hexapod, Leg
+from kinematics import Hexapod, Leg
 import numpy as np
-import inverse_kinematics as ik
-import queue
-import time
-
+import kinematics as ik
 
 class ForwardKinematicsPreview:
 

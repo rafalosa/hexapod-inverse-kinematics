@@ -3,16 +3,8 @@ from abc import ABC, abstractmethod
 from multipledispatch import dispatch
 import utils
 
-#
-# class Node:
-#
-#     def __init__(self, parent: Node, child: Node = None):
-#         self.parent = parent
-#         self.child = child
-#
 
-
-class LimbKinematics(ABC):
+class _LimbKinematics(ABC):
     __slots__ = {"origin",
                  "current_position",
                  "vertices",
@@ -30,7 +22,7 @@ class LimbKinematics(ABC):
         pass
 
 
-class LegKinematics(LimbKinematics):
+class LegKinematics(_LimbKinematics):
     __slots__ = {"_femur",
                  "_tibia",
                  "_knee",

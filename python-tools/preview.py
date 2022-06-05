@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-import simulators
-from robot import Hexapod, Core, Leg
-
+from animators import *
+from kinematics import Hexapod, Core, Leg
 
 if __name__ == '__main__':
 
@@ -22,5 +21,5 @@ if __name__ == '__main__':
     bot.add_leg(femur, tibia)
     bot.add_leg(femur, tibia)
 
-    simulators.InverseKinematicsFixedLegs(ax, bot)
+    InverseKinematicsFixedLegs(ax, bot)
 

@@ -7,7 +7,7 @@ from typing import Dict, Union
 """This is a simplistic environment used to visualize the calculated robot's positions based on matplotlib."""
 
 
-class BodyPart(ABC):
+class _BodyPart(ABC):
 
     """This base class represents the forward kinematics model of limbs which is used to visualize the calculated
     angles from the inverse kinematic model."""
@@ -30,7 +30,7 @@ class BodyPart(ABC):
         pass
 
 
-class Leg(BodyPart):
+class Leg(_BodyPart):
     __slots__ = {"joints",
                  "id_",
                  "parent",
@@ -43,7 +43,7 @@ class Leg(BodyPart):
     # todo: Put angles into a dict.
     # todo: Put limb lengths into a dict.
 
-    def __init__(self, id_: str, parent: BodyPart, ax_: plt.Axes, attach_point: np.ndarray, femur_len, tibia_len,
+    def __init__(self, id_: str, parent: _BodyPart, ax_: plt.Axes, attach_point: np.ndarray, femur_len, tibia_len,
                  leg_angle, femur_ang, tibia_ang):
 
         super().__init__()
@@ -118,7 +118,7 @@ class Leg(BodyPart):
         self.joints[2] = joint_2
 
 
-class Core(BodyPart):
+class Core(_BodyPart):
     """The hexapod core is a hexagon with a desired width and length. The coordinates of vertices are calculated
     from the provided parameters."""
 
